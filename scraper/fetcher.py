@@ -1,8 +1,8 @@
-# proxy_tool/scraper/fetcher.py
+# scraper/fetcher.py
 
 import requests
 import logging
-from typing import List, Tuple
+from typing import List, Optional, Tuple # <-- 确保这一行存在
 
 # 设置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
