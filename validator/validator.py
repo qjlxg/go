@@ -1,11 +1,11 @@
-# proxy_tool/validator/validator.py
+# validator/validator.py
 
 import asyncio
 import aiohttp # For asynchronous HTTP requests
 import socket
 import time
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any # <-- 确保这一行存在
 
 from models.proxy_model import Proxy
 import config # Import config for IP_API_URL and timeouts
