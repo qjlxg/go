@@ -1,0 +1,54 @@
+# .github/workflows/run_proxy_tool.yml
+
+name: Run Proxy Tool
+
+on:
+  # 调度运行：每天 UTC 时间 00:00 (北京时间上午 8:00) 运行
+  schedule:
+    - cron: '0 0 * * *'
+  # 手动触发：允许您在 GitHub Actions 界面手动运行此工作流
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest # 使用最新的 Ubuntu 操作系统环境
+
+    steps:
+    - name: Checkout repository # 步骤1: 拉取您的代码
+      uses: actions/checkout@v4
+
+    - name: Set up Python # 步骤2: 设置 Python 环境
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9' # 您可以根据需要选择其他 Python 版本，例如 '3.10', '3.11'
+        cache: 'pip' # 缓存 pip 依赖，加快后续运行速度
+
+    - name: Install dependencies # 步骤3: 安装 Python 依赖
+      run: |
+        # 确保当前目录是您的项目根目录，也就是 main.py 所在的目录
+        # 如果您的项目代码不在仓库根目录，例如在 subfolder/ 里面，您需要 cd 到 subfolder
+        pip install -r requirements.txt
+
+    - name: Run Proxy Tool # 步骤4: 运行您的 Python 脚本
+      run: |
+        python main.py
+
+    - name: Upload Artifacts (Optional) # 步骤5: 将生成的代理文件上传为工作流产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: proxy-outputs
+        path: output/ # 上传 output 文件夹下的所有文件
+
+    # 如果您希望将 output/ 文件夹中的文件（例如更新后的 Clash 配置）
+    # 提交回仓库，您可以添加以下步骤。这需要额外的权限和配置。
+    # - name: Commit output files (Advanced & Optional)
+    #   run: |
+    #     git config user.name "GitHub Actions Bot"
+    #     git config user.email "github-actions[bot]@users.noreply.github.com"
+    #     git add output/
+    #     git commit -m "Update validated proxies from workflow" || echo "No changes to commit"
+    #     git push
+    #   env:
+    #     # 需要在仓库设置中添加 SECRETS.GITHUB_TOKEN 的写入权限
+    #     # 或者使用个人访问令牌 (PAT) 并配置为仓库 Secret
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
