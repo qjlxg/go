@@ -25,30 +25,27 @@ jobs:
 
     - name: Install dependencies # 步骤3: 安装 Python 依赖
       run: |
-        # 确保当前目录是您的项目根目录，也就是 main.py 所在的目录
-        # 如果您的项目代码不在仓库根目录，例如在 subfolder/ 里面，您需要 cd 到 subfolder
         pip install -r requirements.txt
 
     - name: Run Proxy Tool # 步骤4: 运行您的 Python 脚本
       run: |
         python main.py
 
-    - name: Upload Artifacts (Optional) # 步骤5: 将生成的代理文件上传为工作流产物
-      uses: actions/upload-artifact@v4
-      with:
-        name: proxy-outputs
-        path: output/ # 上传 output 文件夹下的所有文件
-
-    # 如果您希望将 output/ 文件夹中的文件（例如更新后的 Clash 配置）
-    # 提交回仓库，您可以添加以下步骤。这需要额外的权限和配置。
-    # - name: Commit output files (Advanced & Optional)
-    #   run: |
-    #     git config user.name "GitHub Actions Bot"
-    #     git config user.email "github-actions[bot]@users.noreply.github.com"
-    #     git add output/
-    #     git commit -m "Update validated proxies from workflow" || echo "No changes to commit"
-    #     git push
-    #   env:
-    #     # 需要在仓库设置中添加 SECRETS.GITHUB_TOKEN 的写入权限
-    #     # 或者使用个人访问令牌 (PAT) 并配置为仓库 Secret
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Commit output files # 步骤5: 提交 output 文件夹中的文件回仓库
+      run: |
+        git config user.name "GitHub Actions Bot"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        # 检查 output/ 目录下是否有实际的更改，有更改才执行 commit
+        git add output/
+        git diff-index --quiet HEAD || git commit -m "Update validated proxies from workflow"
+        git push
+      env:
+        # 重要的：您需要在仓库设置中给 GITHUB_TOKEN 赋予写入权限
+        # 步骤如下：
+        # 1. 进入您的 GitHub 仓库。
+        # 2. 点击 "Settings" (设置) 选项卡。
+        # 3. 在左侧导航栏中，点击 "Actions" 下的 "General" (通用)。
+        # 4. 向下滚动到 "Workflow permissions" (工作流权限) 部分。
+        # 5. 选择 "Read and write permissions" (读写权限)。
+        # 6. 点击 "Save" (保存) 按钮。
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
