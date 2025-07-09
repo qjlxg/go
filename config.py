@@ -8,7 +8,7 @@ PROXY_SOURCES = [
     "https://raw.githubusercontent.com/freefq/free/master/v2", # Example for Vmess/Vless/Trojan links
     "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All_Configs_Sub.txt", # Example base64 encoded
     "https://raw.githubusercontent.com/cclz8899/Clash-Rule/main/Sub.yaml", # Example Clash YAML
-    # "http://example.com/your_custom_proxy_list.txt", # Add your own sources here
+    "https://raw.githubusercontent.com/qjlxg/hy2/refs/heads/main/configtg.txt", # Add your own sources here
 ]
 
 # --- Parser Configuration ---
