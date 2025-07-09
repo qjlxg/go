@@ -1,11 +1,11 @@
-# proxy_tool/parser/parser.py
+# parser/parser.py
 
 import base64
 import json
 import re
 import urllib.parse
 import logging
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any, Tuple # <-- 确保这一行存在
 
 import yaml # For parsing Clash YAML
 from models.proxy_model import Proxy # Import the Proxy model
