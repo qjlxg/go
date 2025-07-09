@@ -1,8 +1,8 @@
-# proxy_tool/main.py
+# main.py
 
 import asyncio
 import logging
-from typing import List
+from typing import List # <-- 确保这一行存在
 
 # Import modules from our project structure
 import config
