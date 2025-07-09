@@ -1,10 +1,10 @@
-# proxy_tool/output/writer.py
+# output/writer.py
 
 import json
 import yaml
 import os
 import logging
-from typing import List
+from typing import List # <-- 确保这一行存在
 
 from models.proxy_model import Proxy # Import the Proxy model
 import config # Import config for output directory and filenames
