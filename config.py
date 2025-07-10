@@ -43,3 +43,15 @@ TOP_N_PROXIES = None # 或设置为一个整数，如 100
 # 如果设置为 False，即使密码不同，只要服务器地址和端口相同，就可能被视为同一个代理。
 # 默认为 False，通常代理去重不依赖密码，因为密码可能只是随机生成。
 DEDUPLICATE_BY_PASSWORD_TROJAN = False
+
+# 是否启用 HTTP/HTTPS 可访问性检查。如果设置为 True，代理将尝试访问 TEST_HTTP_URL。
+# 只有当 TCP 连通性检查和 HTTP/HTTPS 访问检查都通过时，代理才会被视为有效。
+ENABLE_HTTP_CHECK = True 
+
+# 用于 HTTP/HTTPS 可访问性检查的测试 URL。
+# 建议使用一个稳定、可靠且不易被墙的网站，例如 Google 或 GitHub。
+TEST_HTTP_URL = "https://www.google.com" # 或者 "https://github.com"
+
+# HTTP/HTTPS 可访问性检查的超时时间（秒）。
+# 如果在此时间内无法通过代理访问 TEST_HTTP_URL，则认为该代理无法通过 HTTP 检查。
+HTTP_CHECK_TIMEOUT = 10 # 可以根据需要调整
