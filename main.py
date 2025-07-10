@@ -16,7 +16,7 @@ from models.proxy_model import Proxy # 从 models/proxy_model.py 导入 Proxy �
 
 # 配置日志
 logging.basicConfig(
-    level=logging.INFO, # 设置日志级别为 INFO，只显示 INFO 及以上级别的日志
+    level=logging.WARNING, # 设置日志级别为 INFO，只显示 INFO 及以上级别的日志
     format='%(asctime)s - %(levelname)s - %(message)s', # 日志格式：时间 - 级别 - 消息
     datefmt='%Y-%m-%d %H:%M:%S' # 时间格式
 )
