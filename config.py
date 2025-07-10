@@ -1,45 +1,39 @@
-# proxy_tool/config.py
+# config.py
 
-# --- Scraper Configuration ---
-# List of URLs to fetch raw proxy links from.
-# You can add or remove URLs here.
-# These can be plain text lists, base64 encoded strings, or Clash YAMLs.
+# 代理源列表，程序将从这些 URL 抓取代理信息
+# 您可以在这里添加或删除代理源
 PROXY_SOURCES = [
-    # "https://raw.githubusercontent.com/qjlxg/ss/refs/heads/master/list_raw.txt",
-    "https://raw.githubusercontent.com/qjlxg/vt/refs/heads/main/data/nodes.txt",
-    "https://raw.githubusercontent.com/qjlxg/hy2/refs/heads/main/configtg.txt",
-    "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/data/520.yaml",
-    "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/ss.txt",
-    "https://raw.githubusercontent.com/qjlxg/collectSub/refs/heads/main/config_all_merged_nodes.txt",
+    "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/sub/sub_merge.txt",
+    "https://raw.githubusercontent.com/freefq/free/master/v2",
+    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_vless.txt",
+    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_vmess.txt",
+    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_ss.txt",
+    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_trojan.txt",
+    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_hy2.txt",
+    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_tuic.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All.txt",
+    "https://raw.githubusercontent.com/changfengoss/VPS/main/VLESS.txt",
+    "https://raw.githubusercontent.com/changfengoss/VPS/main/VMess.txt",
+    "https://raw.githubusercontent.com/changfengoss/VPS/main/SS.txt",
+    "https://raw.githubusercontent.com/changfengoss/VPS/main/Trojan.txt",
+    # 添加更多代理源...
 ]
 
-# --- Parser Configuration ---
-# Timeout for fetching raw proxy content from sources (in seconds)
-FETCH_TIMEOUT = 10
-
-# --- Validator Configuration ---
-# Timeout for checking individual proxy latency (in seconds)
+# 抓取和验证代理时的超时时间（秒）
+# FETCH_TIMEOUT 用于从代理源抓取内容时的超时
+FETCH_TIMEOUT = 10 
+# PROXY_CHECK_TIMEOUT 用于检查代理 TCP 连通性时的超时
 PROXY_CHECK_TIMEOUT = 5
 
-# Maximum number of concurrent proxy checks
-# Adjust based on your network and CPU capabilities to avoid overloading.
-MAX_CONCURRENT_CHECKS = 50
+# 最大并发检查数量
+# 较高的值可以加快验证速度，但可能增加对服务器的压力
+MAX_CONCURRENT_CHECKS = 50 
 
-# URL for IP information API (e.g., to get region/ISP).
-# Note: Free APIs might have rate limits (HTTP 429). Consider using a stable one.
-# This example uses ip-api.com, which has rate limits for free tier (45 requests/minute for non-commercial use).
-# For more robust solutions, consider paid APIs or running your own IP lookup service.
-IP_API_URL = "http://ip-api.com/json/{ip}?lang=zh-CN&fields=country,countryCode,regionName,city,isp,query"
+# 输出目录和文件名
+OUTPUT_DIR = "output" # 输出文件将保存在此目录下
+PLAIN_TEXT_OUTPUT_FILENAME = "proxies.txt" # 明文代理列表的文件名
+CLASH_OUTPUT_FILENAME = "clash_config.yaml" # Clash 配置文件的文件名
 
-# --- Output Configuration ---
-# Directory to save the output files
-OUTPUT_DIR = "output"
-
-# Filename for the validated proxies in plain text format (new)
-PLAIN_TEXT_OUTPUT_FILENAME = "plain_proxies.txt"
-
-# Filename for the validated proxies in Clash YAML format
-CLASH_OUTPUT_FILENAME = "clash_config.yaml"
-
-# Top N proxies to include in the output files (sorted by latency)
-TOP_N_PROXIES = 9000 # Set to None to include all validated proxies
+# 筛选通过验证的代理数量，设置为 None 或 0 表示输出所有有效代理
+# 例如，如果您只想输出延迟最低的前 100 个代理，设置为 100
+TOP_N_PROXIES = None # 或设置为一个整数，如 100
