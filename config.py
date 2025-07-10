@@ -46,12 +46,12 @@ DEDUPLICATE_BY_PASSWORD_TROJAN = False
 
 # 是否启用 HTTP/HTTPS 可访问性检查。如果设置为 True，代理将尝试访问 TEST_HTTP_URL。
 # 只有当 TCP 连通性检查和 HTTP/HTTPS 访问检查都通过时，代理才会被视为有效。
-ENABLE_HTTP_CHECK = True 
+ENABLE_HTTP_CHECK = False # 已更改为 False，取消 HTTP/HTTPS 检查
 
 # 用于 HTTP/HTTPS 可访问性检查的测试 URL。
 # 建议使用一个稳定、可靠且不易被墙的网站，例如 Google 或 GitHub。
-TEST_HTTP_URL = "https://www.google.com" # 或者 "https://github.com"
+TEST_HTTP_URL = "https://www.google.com" 
 
 # HTTP/HTTPS 可访问性检查的超时时间（秒）。
 # 如果在此时间内无法通过代理访问 TEST_HTTP_URL，则认为该代理无法通过 HTTP 检查。
-HTTP_CHECK_TIMEOUT = 10 # 可以根据需要调整
+HTTP_CHECK_TIMEOUT = 10
