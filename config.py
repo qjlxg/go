@@ -3,19 +3,19 @@
 # 代理源列表，程序将从这些 URL 抓取代理信息
 # 您可以在这里添加或删除代理源
 PROXY_SOURCES = [
-    "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/sub/sub_merge.txt",
-    "https://raw.githubusercontent.com/freefq/free/master/v2",
-    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_vless.txt",
-    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_vmess.txt",
-    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_ss.txt",
-    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_trojan.txt",
-    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_hy2.txt",
-    "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_tuic.txt",
-    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All.txt",
-    "https://raw.githubusercontent.com/changfengoss/VPS/main/VLESS.txt",
-    "https://raw.githubusercontent.com/changfengoss/VPS/main/VMess.txt",
-    "https://raw.githubusercontent.com/changfengoss/VPS/main/SS.txt",
-    "https://raw.githubusercontent.com/changfengoss/VPS/main/Trojan.txt",
+    "https://raw.githubusercontent.com/qjlxg/vt/refs/heads/main/data/nodes.txt",
+    "https://raw.githubusercontent.com/qjlxg/hy2/refs/heads/main/configtg.txt",
+    "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/ss.txt",
+    "https://raw.githubusercontent.com/qjlxg/collectSub/refs/heads/main/config_all_merged_nodes.txt",
+   # "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_ss.txt",
+  #  "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_trojan.txt",
+  #  "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_hy2.txt",
+   # "https://raw.githubusercontent.com/ermaozi/get_proxy/main/proxy_tuic.txt",
+   # "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All.txt",
+   # "https://raw.githubusercontent.com/changfengoss/VPS/main/VLESS.txt",
+   # "https://raw.githubusercontent.com/changfengoss/VPS/main/VMess.txt",
+   # "https://raw.githubusercontent.com/changfengoss/VPS/main/SS.txt",
+   # "https://raw.githubusercontent.com/changfengoss/VPS/main/Trojan.txt",
     # 添加更多代理源...
 ]
 
