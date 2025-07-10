@@ -1,29 +1,40 @@
-# proxy_tool/validator/validator.py
+# validator/validator.py
 
 import asyncio
 import aiohttp
 import logging
 from typing import List, Dict, Any, Optional
 
-from .. import config
+import config # 绝对导入 config 模块
+
+# 获取当前模块的日志记录器
+logger = logging.getLogger(__name__)
 
 class ProxyValidator:
     def __init__(self):
+        # 实例化时初始化日志记录器
         self.logger = logging.getLogger(__name__)
 
     async def _check_tcp_latency(self, server: str, port: int) -> Optional[float]:
-        """Checks the TCP latency of a proxy."""
+        """
+        异步函数：检查代理的 TCP 连通性并计算延迟。
+        Args:
+            server (str): 代理服务器地址。
+            port (int): 代理服务器端口。
+        Returns:
+            Optional[float]: 如果 TCP 连接成功，返回延迟（毫秒）；否则返回 None。
+        """
         try:
-            conn_start_time = asyncio.get_event_loop().time()
-            # Use open_connection for direct TCP check
+            conn_start_time = asyncio.get_event_loop().time() # 记录连接开始时间
+            # 使用 asyncio.open_connection 进行直接的 TCP 连接检查
             reader, writer = await asyncio.wait_for(
                 asyncio.open_connection(server, port),
-                timeout=config.PROXY_CHECK_TIMEOUT
+                timeout=config.PROXY_CHECK_TIMEOUT # 设置连接超时时间
             )
-            conn_end_time = asyncio.get_event_loop().time()
-            writer.close()
-            await writer.wait_closed()
-            latency_ms = (conn_end_time - conn_start_time) * 1000
+            conn_end_time = asyncio.get_event_loop().time() # 记录连接结束时间
+            writer.close() # 关闭写入器
+            await writer.wait_closed() # 等待写入器关闭
+            latency_ms = (conn_end_time - conn_start_time) * 1000 # 计算延迟（毫秒）
             self.logger.debug(f"代理 {server}:{port} TCP 连接成功，延迟: {latency_ms:.2f}ms")
             return latency_ms
         except asyncio.TimeoutError:
@@ -33,90 +44,74 @@ class ProxyValidator:
             self.logger.debug(f"代理 {server}:{port} TCP 连接失败: {e}")
             return None
 
-    # 移除了 _get_ip_info 函数，因为我们不再需要它。
-    # async def _get_ip_info(self, ip_address: str) -> Dict[str, Any]:
-    #     """Fetches IP information from a public API."""
-    #     url = config.IP_API_URL.format(ip=ip_address)
-    #     try:
-    #         async with aiohttp.ClientSession() as session:
-    #             async with session.get(url, timeout=config.IP_API_FETCH_TIMEOUT) as response:
-    #                 if response.status == 200:
-    #                     data = await response.json()
-    #                     if data and data.get('status') == 'success':
-    #                         self.logger.debug(f"成功获取 IP {ip_address} 信息。")
-    #                         return data
-    #                     else:
-    #                         self.logger.warning(f"IP 信息 API 返回不良状态或错误: {data.get('message', '未知错误')}.")
-    #                         return {}
-    #                 elif response.status == 429:
-    #                     self.logger.warning(f"获取 IP 信息时发生 HTTP 客户端错误: {ip_address}, 错误: {response.status}, message='Too Many Requests', url='{url}'")
-    #                     return {}
-    #                 else:
-    #                     self.logger.warning(f"获取 IP 信息时发生 HTTP 错误: {ip_address}, 状态码: {response.status}, URL: {url}")
-    #                     return {}
-    #     except asyncio.TimeoutError:
-    #         self.logger.warning(f"获取 IP 信息超时: {ip_address}")
-    #         return {}
-    #     except aiohttp.ClientError as e:
-    #         self.logger.warning(f"获取 IP 信息时发生 HTTP 客户端错误: {ip_address}, 错误: {e}")
-    #         return {}
-    #     except Exception as e:
-    #         self.logger.error(f"获取 IP 信息时发生未知错误: {ip_address}, 错误: {e}")
-    #         return {}
+    # _get_ip_info 函数及其相关逻辑已完全移除，因为已决定不再进行 IP 查询
 
     async def validate_proxy(self, proxy: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
-        Validates a single proxy by checking TCP latency.
-        IP information lookup is removed.
+        异步函数：验证单个代理的连通性。
+        IP 地址信息查询功能已从这里移除。
+        Args:
+            proxy (Dict[str, Any]): 包含代理信息的字典。
+        Returns:
+            Optional[Dict[str, Any]]: 如果代理验证成功，返回包含延迟等信息的代理字典；否则返回 None。
         """
         proxy_type = proxy.get('type')
         server = proxy.get('server')
         port = proxy.get('port')
-        ps = proxy.get('ps', f"{proxy_type}-{server}:{port}") # Proxy name/tag
+        # 获取代理名称，如果不存在则生成一个默认名称
+        ps = proxy.get('ps', f"{proxy_type}-{server}:{port}") 
 
-        if not all([proxy_type, server, port]):
+        if not all([proxy_type, server, port]): # 检查代理信息是否完整
             self.logger.warning(f"跳过无效代理（信息不完整）: {proxy}")
             return None
 
         self.logger.debug(f"正在验证代理 {ps} ({server}:{port})...")
 
-        # --- Step 1: Check TCP Latency ---
+        # --- 步骤 1: 检查 TCP 连通性并获取延迟 ---
         latency = await self._check_tcp_latency(server, port)
 
-        if latency is not None:
-            proxy['delay'] = latency
-            # --- IP Information Lookup (Removed) ---
-            # 移除了对 _get_ip_info 的调用及其结果处理
-            proxy['country'] = None # 显式设为 None，表示不再获取
-            proxy['regionName'] = None # 显式设为 None
-            proxy['isp'] = None # 显式设为 None
+        if latency is not None: # 如果成功获取到延迟，说明代理有效
+            proxy['delay'] = latency # 将延迟添加到代理信息中
             
-            self.logger.info(f"代理 {ps} 验证成功。延迟: {latency:.2f}ms, 地区: {proxy['country']}, ISP: {proxy['isp']}")
+            # --- IP 信息查询 (已移除) ---
+            # 由于已决定不再进行 IP 信息查询，这里显式将相关字段设为 None
+            proxy['country'] = None 
+            proxy['regionName'] = None 
+            proxy['isp'] = None 
+            
+            self.logger.info(f"代理 {ps} 验证成功。延迟: {latency:.2f}ms") # 不再打印地区和 ISP 信息
             return proxy
         else:
             self.logger.debug(f"代理 {ps} 验证失败。")
             return None
 
     async def validate_proxies_concurrently(self, proxies: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Validates a list of proxies concurrently."""
+        """
+        异步函数：并发验证代理列表。
+        Args:
+            proxies (List[Dict[str, Any]]): 包含代理字典的列表。
+        Returns:
+            List[Dict[str, Any]]: 验证通过的代理字典列表。
+        """
         validator_tasks = []
+        # 为每个代理创建一个验证任务
         for proxy in proxies:
             validator_tasks.append(self.validate_proxy(proxy))
 
         results = []
-        # Create a semaphore to limit concurrent tasks
+        # 创建一个信号量，用于限制并发任务的数量，避免同时检查过多代理
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENT_CHECKS)
 
         async def limited_validate(task):
-            async with semaphore:
+            """带有并发限制的验证包装器。"""
+            async with semaphore: # 进入信号量，当达到最大并发数时会等待
                 return await task
 
-        # Gather results from concurrent tasks
-        # Use return_when=asyncio.ALL_COMPLETED to wait for all tasks
-        # or asyncio.FIRST_EXCEPTION if you want to stop on first error
+        # 使用 asyncio.as_completed 收集任务结果，可以实时处理已完成的任务
         for f in asyncio.as_completed([limited_validate(task) for task in validator_tasks]):
-            result = await f
-            if result:
+            result = await f # 获取已完成任务的结果
+            if result: # 如果结果不为 None，表示代理验证成功
                 results.append(result)
         
+        self.logger.info(f"完成所有代理的并发验证。共发现 {len(results)} 个有效代理。")
         return results
