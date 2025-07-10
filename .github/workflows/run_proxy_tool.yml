@@ -29,7 +29,7 @@ jobs:
 
     - name: Run Proxy Tool # 步骤4: 运行您的 Python 脚本
       run: |
-        export PYTHONPATH=$PWD:$PYTHONPATH
+        
         python main.py
 
     - name: Commit output files # 步骤5: 提交 output 文件夹中的文件回仓库
