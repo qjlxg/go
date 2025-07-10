@@ -44,4 +44,4 @@ JSON_OUTPUT_FILENAME = "validated_proxies.json"
 CLASH_OUTPUT_FILENAME = "clash_config.yaml"
 
 # Top N proxies to include in the output files (sorted by latency)
-TOP_N_PROXIES = 200 # Set to None to include all validated proxies
+TOP_N_PROXIES = 9000 # Set to None to include all validated proxies
