@@ -5,11 +5,9 @@
 # You can add or remove URLs here.
 # These can be plain text lists, base64 encoded strings, or Clash YAMLs.
 PROXY_SOURCES = [
-    "https://raw.githubusercontent.com/qjlxg/ss/refs/heads/master/list_raw.txt", 
+   # "https://raw.githubusercontent.com/qjlxg/ss/refs/heads/master/list_raw.txt", 
     "https://raw.githubusercontent.com/qjlxg/vt/refs/heads/main/data/nodes.txt", 
-    "https://raw.githubusercontent.com/cclz8899/Clash-Rule/main/Sub.yaml", 
     "https://raw.githubusercontent.com/qjlxg/hy2/refs/heads/main/configtg.txt", 
-    "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/data/clash.yaml",
     "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/data/520.yaml",
     "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/ss.txt",
     "https://raw.githubusercontent.com/qjlxg/collectSub/refs/heads/main/config_all_merged_nodes.txt",
