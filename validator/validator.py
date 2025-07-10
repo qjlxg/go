@@ -6,6 +6,7 @@ import logging
 from typing import List, Dict, Any, Optional
 
 import config # 绝对导入 config 模块
+from models.proxy_model import Proxy # 导入 Proxy 类
 
 # 获取当前模块的日志记录器
 logger = logging.getLogger(__name__)
@@ -44,25 +45,22 @@ class ProxyValidator:
             self.logger.debug(f"代理 {server}:{port} TCP 连接失败: {e}")
             return None
 
-    # _get_ip_info 函数及其相关逻辑已完全移除，因为已决定不再进行 IP 查询
-
-    async def validate_proxy(self, proxy: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def validate_proxy(self, proxy: Proxy) -> Optional[Proxy]:
         """
         异步函数：验证单个代理的连通性。
-        IP 地址信息查询功能已从这里移除。
         Args:
-            proxy (Dict[str, Any]): 包含代理信息的字典。
+            proxy (Proxy): Proxy 类的实例。
         Returns:
-            Optional[Dict[str, Any]]: 如果代理验证成功，返回包含延迟等信息的代理字典；否则返回 None。
+            Optional[Proxy]: 如果代理验证成功，返回包含延迟等信息的 Proxy 实例；否则返回 None。
         """
-        proxy_type = proxy.get('type')
-        server = proxy.get('server')
-        port = proxy.get('port')
-        # 获取代理名称，如果不存在则生成一个默认名称
-        ps = proxy.get('ps', f"{proxy_type}-{server}:{port}") 
+        # 直接通过属性访问 Proxy 对象的数据
+        proxy_type = proxy.type
+        server = proxy.server
+        port = proxy.port
+        ps = proxy.ps # 直接获取代理名称
 
         if not all([proxy_type, server, port]): # 检查代理信息是否完整
-            self.logger.warning(f"跳过无效代理（信息不完整）: {proxy}")
+            self.logger.warning(f"跳过无效代理（信息不完整）: {proxy.proxy_str}")
             return None
 
         self.logger.debug(f"正在验证代理 {ps} ({server}:{port})...")
@@ -71,13 +69,13 @@ class ProxyValidator:
         latency = await self._check_tcp_latency(server, port)
 
         if latency is not None: # 如果成功获取到延迟，说明代理有效
-            proxy['delay'] = latency # 将延迟添加到代理信息中
+            proxy.delay = latency # 将延迟添加到 Proxy 对象中
             
             # --- IP 信息查询 (已移除) ---
             # 由于已决定不再进行 IP 信息查询，这里显式将相关字段设为 None
-            proxy['country'] = None 
-            proxy['regionName'] = None 
-            proxy['isp'] = None 
+            proxy.country = None 
+            proxy.regionName = None 
+            proxy.isp = None 
             
             self.logger.info(f"代理 {ps} 验证成功。延迟: {latency:.2f}ms") # 不再打印地区和 ISP 信息
             return proxy
@@ -85,16 +83,16 @@ class ProxyValidator:
             self.logger.debug(f"代理 {ps} 验证失败。")
             return None
 
-    async def validate_proxies_concurrently(self, proxies: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def validate_proxies_concurrently(self, proxies: List[Proxy]) -> List[Proxy]:
         """
         异步函数：并发验证代理列表。
         Args:
-            proxies (List[Dict[str, Any]]): 包含代理字典的列表。
+            proxies (List[Proxy]): 包含 Proxy 实例的列表。
         Returns:
-            List[Dict[str, Any]]: 验证通过的代理字典列表。
+            List[Proxy]: 验证通过的 Proxy 实例列表。
         """
         validator_tasks = []
-        # 为每个代理创建一个验证任务
+        # 为每个 Proxy 实例创建一个验证任务
         for proxy in proxies:
             validator_tasks.append(self.validate_proxy(proxy))
 
