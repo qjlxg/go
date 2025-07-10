@@ -5,12 +5,14 @@
 # You can add or remove URLs here.
 # These can be plain text lists, base64 encoded strings, or Clash YAMLs.
 PROXY_SOURCES = [
-    "https://raw.githubusercontent.com/freefq/free/master/v2", # Example for Vmess/Vless/Trojan links
-    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All_Configs_Sub.txt", # Example base64 encoded
-    "https://raw.githubusercontent.com/cclz8899/Clash-Rule/main/Sub.yaml", # Example Clash YAML
-    "https://raw.githubusercontent.com/qjlxg/hy2/refs/heads/main/configtg.txt", # Add your own sources here
+    "https://raw.githubusercontent.com/qjlxg/ss/refs/heads/master/list_raw.txt", 
+    "https://raw.githubusercontent.com/qjlxg/vt/refs/heads/main/data/nodes.txt", 
+    "https://raw.githubusercontent.com/cclz8899/Clash-Rule/main/Sub.yaml", 
+    "https://raw.githubusercontent.com/qjlxg/hy2/refs/heads/main/configtg.txt", 
     "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/data/clash.yaml",
     "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/data/520.yaml",
+    "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/ss.txt",
+    "https://raw.githubusercontent.com/qjlxg/collectSub/refs/heads/main/config_all_merged_nodes.txt",
 ]
 
 # --- Parser Configuration ---
