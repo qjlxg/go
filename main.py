@@ -5,11 +5,11 @@ import asyncio
 import logging
 from typing import List, Dict, Any
 
-from proxy_tool import config
-from proxy_tool.scraper import scraper
-from proxy_tool.parser import parser
-from proxy_tool.validator import validator
-from proxy_tool.writer import writer
+from import config
+from scraper import scraper
+from parser import parser
+from validator import validator
+from writer import writer
 
 # Configure logging
 logging.basicConfig(
