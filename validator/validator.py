@@ -8,6 +8,12 @@ from typing import List, Dict, Any, Optional
 import config # 绝对导入 config 模块
 from models.proxy_model import Proxy # 导入 Proxy 类
 
+# 尝试导入 aiohttp_socks 的 ProxyConnector，如果未安装，会在运行时捕获错误
+try:
+    from aiohttp_socks import ProxyConnector
+except ImportError:
+    ProxyConnector = None # 如果没有安装，则设置为 None
+
 # 获取当前模块的日志记录器
 logger = logging.getLogger(__name__)
 
@@ -53,42 +59,49 @@ class ProxyValidator:
         Returns:
             bool: 如果代理能够访问测试 URL，返回 True；否则返回 False。
         """
-        # 注意：aiohttp 的代理参数原生只支持 http:// 和 socks5:// 协议。
-        # 对于 SS, Vmess, Trojan, Vless, Hy2, Tuic 等协议，aiohttp 无法直接使用。
-        # 这意味着对于这些非标准协议的代理，此检查可能会失败，即使代理本身是有效的。
-        # 如果需要支持，可能需要引入如 'aiohttp_socks' 这样的第三方库，或运行本地协议转换代理。
+        # 注意：aiohttp 的原生代理参数只支持 http:// 和 socks5:// 协议。
+        # 对于 Shadowsocks (SS), Vmess, Trojan, Vless, Hy2, Tuic 等协议，
+        # aiohttp 无法直接使用，需要通过专门的客户端将流量转换为 HTTP 或 SOCKS5。
+        # 当前实现仅对 HTTP 和 SOCKS5 代理进行实际的 HTTP 访问检查。
+        # 对于其他协议类型，此检查可能会跳过或失败，即使代理本身在配合正确客户端时是有效的。
 
-        # 尝试构建 aiohttp 可识别的代理 URL
-        proxy_url = ""
-        if proxy.type in ['http', 'https']:
-            # 对于 HTTP/HTTPS 代理，直接构建 URL
-            if proxy.username and proxy.password:
-                proxy_url = f"http://{proxy.username}:{proxy.password}@{proxy.server}:{proxy.port}"
-            else:
-                proxy_url = f"http://{proxy.server}:{proxy.port}"
-        elif proxy.type == 'socks5':
-            # 对于 SOCKS5 代理，构建 URL (通常需要 aiohttp_socks)
-            if proxy.username and proxy.password:
-                proxy_url = f"socks5://{proxy.username}:{proxy.password}@{proxy.server}:{proxy.port}"
-            else:
-                proxy_url = f"socks5://{proxy.server}:{proxy.port}"
-        else:
-            # 对于其他协议类型，不构建 proxy_url，因为 aiohttp 不直接支持。
-            # 这意味着这些类型的代理将跳过 HTTP 检查（或直接失败）。
-            self.logger.debug(f"代理类型 {proxy.type} 不直接支持 aiohttp HTTP 访问检查。将跳过此检查。")
-            return True # 默认返回 True，因为我们无法进行有效的 HTTP 检查，不应因此淘汰代理
-
-        # 如果没有构建出有效的 proxy_url，也直接返回 True，表示无法进行 HTTP 检查
-        if not proxy_url:
-            return True
+        connector = None
+        proxy_url_str = "" # 用于构建代理 URL 字符串
 
         try:
-            async with aiohttp.ClientSession() as session:
+            if proxy.type in ['http', 'https']:
+                if proxy.username and proxy.password:
+                    proxy_url_str = f"http://{proxy.username}:{proxy.password}@{proxy.server}:{proxy.port}"
+                else:
+                    proxy_url_str = f"http://{proxy.server}:{proxy.port}"
+                # 对于 HTTP/HTTPS 代理，aiohttp 可以直接通过 'proxy' 参数使用
+                pass 
+            elif proxy.type == 'socks5':
+                if ProxyConnector is None:
+                    self.logger.warning("未安装 'aiohttp_socks' 库，无法对 SOCKS5 代理进行 HTTP/HTTPS 检查。请运行 'pip install aiohttp_socks'。")
+                    return True # 无法检查则默认通过
+                
+                if proxy.username and proxy.password:
+                    proxy_url_str = f"socks5://{proxy.username}:{proxy.password}@{proxy.server}:{proxy.port}"
+                else:
+                    proxy_url_str = f"socks5://{proxy.server}:{proxy.port}"
+                connector = ProxyConnector.from_url(proxy_url_str) # 使用 ProxyConnector
+
+            else:
+                self.logger.debug(f"代理类型 {proxy.type} 不直接支持 HTTP/HTTPS 访问检查 (需要特定客户端或转换)。将跳过此检查。")
+                return True # 对于无法直接支持的协议，默认返回 True，不因此淘汰代理
+
+            async with aiohttp.ClientSession(connector=connector if connector else None) as session:
+                request_kwargs = {}
+                # 如果没有使用自定义连接器 (即对于 HTTP/HTTPS 代理)，则使用 'proxy' 参数
+                if not connector and proxy_url_str: 
+                     request_kwargs['proxy'] = proxy_url_str
+
                 async with session.get(
                     config.TEST_HTTP_URL,
-                    proxy=proxy_url,
                     timeout=config.HTTP_CHECK_TIMEOUT,
-                    allow_redirects=True # 允许重定向
+                    allow_redirects=True, # 允许重定向
+                    **request_kwargs # 传递代理参数（如果设置了）
                 ) as response:
                     if response.status == 200:
                         self.logger.debug(f"代理 {proxy.ps} ({proxy.server}:{proxy.port}) HTTP/HTTPS 访问成功。")
@@ -137,6 +150,7 @@ class ProxyValidator:
         # --- 步骤 2: (可选) 检查 HTTP/HTTPS 可访问性 ---
         if config.ENABLE_HTTP_CHECK:
             http_access_ok = await self._check_http_access(proxy)
+            # 只有当 TCP 和 HTTP 检查都通过时才返回代理
             if not http_access_ok:
                 self.logger.debug(f"代理 {ps} HTTP/HTTPS 访问检查失败。")
                 return None
