@@ -5,9 +5,9 @@
 # You can add or remove URLs here.
 # These can be plain text lists, base64 encoded strings, or Clash YAMLs.
 PROXY_SOURCES = [
-   # "https://raw.githubusercontent.com/qjlxg/ss/refs/heads/master/list_raw.txt", 
-    "https://raw.githubusercontent.com/qjlxg/vt/refs/heads/main/data/nodes.txt", 
-    "https://raw.githubusercontent.com/qjlxg/hy2/refs/heads/main/configtg.txt", 
+    # "https://raw.githubusercontent.com/qjlxg/ss/refs/heads/master/list_raw.txt",
+    "https://raw.githubusercontent.com/qjlxg/vt/refs/heads/main/data/nodes.txt",
+    "https://raw.githubusercontent.com/qjlxg/hy2/refs/heads/main/configtg.txt",
     "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/data/520.yaml",
     "https://raw.githubusercontent.com/qjlxg/aggregator/refs/heads/main/ss.txt",
     "https://raw.githubusercontent.com/qjlxg/collectSub/refs/heads/main/config_all_merged_nodes.txt",
@@ -35,8 +35,8 @@ IP_API_URL = "http://ip-api.com/json/{ip}?lang=zh-CN&fields=country,countryCode,
 # Directory to save the output files
 OUTPUT_DIR = "output"
 
-# Filename for the validated proxies in JSON format
-JSON_OUTPUT_FILENAME = "validated_proxies.json"
+# Filename for the validated proxies in plain text format (new)
+PLAIN_TEXT_OUTPUT_FILENAME = "plain_proxies.txt"
 
 # Filename for the validated proxies in Clash YAML format
 CLASH_OUTPUT_FILENAME = "clash_config.yaml"
