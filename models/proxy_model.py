@@ -1,181 +1,101 @@
 # models/proxy_model.py
 
-import json
-from typing import Optional, Dict, Any # <-- 添加这一行
+from typing import Dict, Any, Optional
+import hashlib # 用于生成唯一哈希键
+import json # 用于处理 JSON (如果需要)
+
+import config # 绝对导入 config 模块
 
 class Proxy:
-    def __init__(self,
-                 name: str,
-                 proxy_type: str,
-                 server: str,
-                 port: int,
-                 uuid: Optional[str] = None,
-                 password: Optional[str] = None,
-                 alter_id: Optional[int] = None,
-                 cipher: Optional[str] = None,
-                 network: Optional[str] = None, # e.g., "ws", "grpc", "tcp"
-                 tls: bool = False,
-                 skip_cert_verify: bool = False, # For insecure TLS
-                 host: Optional[str] = None, # SNI for TLS, Host header for WS/HTTP
-                 path: Optional[str] = None, # Path for WS/HTTP/gRPC
-                 service_name: Optional[str] = None, # For gRPC
-                 flow: Optional[str] = None, # Vless flow
-                 obfs: Optional[str] = None, # Hysteria2 obfs
-                 obfs_password: Optional[str] = None, # Hysteria2 obfs password
-                 raw_link: Optional[str] = None, # Original raw link
-                 latency: Optional[float] = None, # In milliseconds
-                 region: Optional[str] = None, # Country/Region
-                 isp: Optional[str] = None, # Internet Service Provider
-                 last_checked: Optional[float] = None # Unix timestamp
-                ):
-        self.name = name
-        self.proxy_type = proxy_type
-        self.server = server
-        self.port = port
-        self.uuid = uuid
-        self.password = password
-        self.alter_id = alter_id
-        self.cipher = cipher
-        self.network = network
-        self.tls = tls
-        self.skip_cert_verify = skip_cert_verify
-        self.host = host
-        self.path = path
-        self.service_name = service_name
-        self.flow = flow
-        self.obfs = obfs
-        self.obfs_password = obfs_password
-        self.raw_link = raw_link
-        self.latency = latency
-        self.region = region
-        self.isp = isp
-        self.last_checked = last_checked
+    """
+    代表一个验证通过的代理对象，包含其所有属性。
+    """
+    def __init__(self, proxy_str: str, ps: Optional[str] = None, ptype: Optional[str] = None,
+                 server: Optional[str] = None, port: Optional[int] = None,
+                 delay: Optional[float] = None, country: Optional[str] = None,
+                 region_name: Optional[str] = None, isp: Optional[str] = None,
+                 data: Optional[Dict[str, Any]] = None):
+        """
+        初始化 Proxy 对象。
+        Args:
+            proxy_str (str): 原始代理链接字符串 (如 ss://...)。
+            ps (Optional[str]): 代理名称/标签。
+            ptype (Optional[str]): 协议类型 (如 'ss', 'vmess', 'trojan')。
+            server (Optional[str]): 服务器地址。
+            port (Optional[int]): 服务器端口。
+            delay (Optional[float]): 延迟（毫秒）。
+            country (Optional[str]): IP 信息中的国家（已移除 IP 查询功能，此字段将为 None）。
+            region_name (Optional[str]): IP 信息中的地区名称（已移除 IP 查询功能，此字段将为 None）。
+            isp (Optional[str]): IP 信息中的 ISP（已移除 IP 查询功能，此字段将为 None）。
+            data (Optional[Dict[str, Any]]): 用于存储所有额外的解析数据。
+        """
+        self.proxy_str = proxy_str  # 原始代理链接字符串
+        self.ps = ps                # 代理名称
+        self.type = ptype           # 协议类型
+        self.server = server        # 服务器地址
+        self.port = port            # 服务器端口
+        self.delay = delay          # 延迟（毫秒）
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Converts the Proxy object to a dictionary."""
-        return {
-            "name": self.name,
-            "type": self.proxy_type,
-            "server": self.server,
-            "port": self.port,
-            "uuid": self.uuid,
-            "password": self.password,
-            "alter_id": self.alter_id,
-            "cipher": self.cipher,
-            "network": self.network,
-            "tls": self.tls,
-            "skip_cert_verify": self.skip_cert_verify,
-            "host": self.host,
-            "path": self.path,
-            "service_name": self.service_name,
-            "flow": self.flow,
-            "obfs": self.obfs,
-            "obfs_password": self.obfs_password,
-            "raw_link": self.raw_link,
-            "latency": self.latency,
-            "region": self.region,
-            "isp": self.isp,
-            "last_checked": self.last_checked
-        }
+        # IP 信息字段，由于已移除 IP 查询，这些字段将默认为 None
+        self.country = country      
+        self.regionName = region_name
+        self.isp = isp              
+        
+        # 用于存储所有额外的解析数据，例如 VMess 的 UUID、alterId 等
+        self.data = data if data is not None else {} 
+
+        # 确保核心字段也在 data 字典中，方便 to_dict 和 generate_key 统一处理
+        self.data['proxy_str'] = proxy_str
+        if ps is not None: self.data['ps'] = ps
+        if ptype is not None: self.data['type'] = ptype
+        if server is not None: self.data['server'] = server
+        if port is not None: self.data['port'] = port
+        if delay is not None: self.data['delay'] = delay
+        if country is not None: self.data['country'] = country
+        if region_name is not None: self.data['regionName'] = region_name
+        if isp is not None: self.data['isp'] = isp
+
 
     def generate_key(self) -> str:
-        """Generates a unique key for deduplication."""
-        # Normalize name to avoid issues with different names for the same proxy
-        normalized_name = self.name.split(' ')[0] if self.name else ''
-        parts = [
-            self.proxy_type,
-            self.server,
-            str(self.port),
-            self.uuid if self.uuid else '',
-            self.password if self.password else '',
-            self.cipher if self.cipher else '',
-            self.network if self.network else '',
-            self.host if self.host else '',
-            self.path if self.path else '',
-            normalized_name
-        ]
-        return ":".join(str(p) for p in parts if p is not None).lower()
+        """
+        为代理生成一个唯一的键，用于去重。
+        Args:
+            None
+        Returns:
+            str: 代理的唯一哈希键。
+        """
+        # 使用协议类型、服务器地址和端口作为基础唯一键
+        key_parts = [self.type, self.server, str(self.port)]
+        
+        # 对于某些协议（如 VMess/VLESS），UUID 也是其唯一性的重要组成部分
+        if self.type in ['vmess', 'vless'] and 'uuid' in self.data:
+            key_parts.append(self.data['uuid'])
+        
+        # 对于 Trojan，如果密码是区分用户的（例如一个用户一个密码），则也应作为键的一部分
+        if self.type == 'trojan' and 'password' in self.data and config.DEDUPLICATE_BY_PASSWORD_TROJAN: # 假设 config 里有一个控制此行为的变量
+            key_parts.append(self.data['password'])
 
-    def to_clash_proxy_dict(self) -> Dict[str, Any]:
-        """Converts the Proxy object to a Clash-compatible dictionary."""
-        clash_dict = {
-            "name": self.name,
-            "type": self.proxy_type,
-            "server": self.server,
-            "port": self.port
-        }
+        # 对于 Hysteria2 和 TUIC，如果密码或 UUID 是区分节点的，也应考虑
+        if self.type in ['hysteria2', 'tuic'] and 'password' in self.data:
+             key_parts.append(self.data['password'])
 
-        if self.proxy_type == "vmess":
-            clash_dict["uuid"] = self.uuid
-            clash_dict["alterId"] = self.alter_id if self.alter_id is not None else 0
-            clash_dict["cipher"] = self.cipher if self.cipher else "auto"
-            clash_dict["network"] = self.network if self.network else "tcp"
-            if self.network == "ws":
-                clash_dict["ws-path"] = self.path if self.path else "/"
-                clash_dict["ws-headers"] = {"Host": self.host} if self.host else {"Host": self.server}
-            elif self.network == "grpc":
-                clash_dict["grpc-service-name"] = self.service_name if self.service_name else ""
+        # 将所有关键部分用 ':' 连接起来，并进行 SHA256 哈希，生成一个紧凑且鲁棒的唯一键
+        # filter(None, ...) 用于移除列表中的 None 值
+        unique_string = ':'.join(filter(None, key_parts)) 
+        return hashlib.sha256(unique_string.encode('utf-8')).hexdigest()
 
-            if self.tls:
-                clash_dict["tls"] = True
-                if self.skip_cert_verify:
-                    clash_dict["skip-cert-verify"] = True
-                if self.host:
-                    clash_dict["servername"] = self.host # SNI for TLS
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        将 Proxy 对象转换为字典。
+        Returns:
+            Dict[str, Any]: 代理属性的字典表示。
+        """
+        # 返回存储在 self.data 中的所有解析出的数据
+        return self.data
 
-        elif self.proxy_type == "vless":
-            clash_dict["uuid"] = self.uuid
-            clash_dict["network"] = self.network if self.network else "tcp"
-            if self.flow:
-                clash_dict["flow"] = self.flow
-
-            if self.network == "ws":
-                clash_dict["ws-path"] = self.path if self.path else "/"
-                clash_dict["ws-headers"] = {"Host": self.host} if self.host else {"Host": self.server}
-            elif self.network == "grpc":
-                clash_dict["grpc-service-name"] = self.service_name if self.service_name else ""
-
-            if self.tls:
-                clash_dict["tls"] = True
-                if self.skip_cert_verify:
-                    clash_dict["skip-cert-verify"] = True
-                if self.host:
-                    clash_dict["servername"] = self.host # SNI for TLS
-
-        elif self.proxy_type == "trojan":
-            clash_dict["password"] = self.password
-            if self.network:
-                clash_dict["network"] = self.network
-            if self.tls: # Trojan almost always TLS
-                clash_dict["tls"] = True
-                if self.skip_cert_verify:
-                    clash_dict["skip-cert-verify"] = True
-                if self.host:
-                    clash_dict["sni"] = self.host # SNI for Trojan
-
-        elif self.proxy_type == "ss":
-            clash_dict["password"] = self.password
-            clash_dict["cipher"] = self.cipher
-
-        elif self.proxy_type == "hysteria2":
-            clash_dict["password"] = self.password
-            clash_dict["obfs"] = self.obfs if self.obfs else ""
-            clash_dict["obfs-password"] = self.obfs_password if self.obfs_password else ""
-            clash_dict["tls"] = True # Hysteria2 implies TLS
-            if self.skip_cert_verify:
-                clash_dict["skip-cert-verify"] = True
-            if self.host:
-                clash_dict["sni"] = self.host # Hysteria2 also uses SNI
-
-        elif self.proxy_type in ["http", "https", "socks5", "socks4"]:
-            if self.password:
-                clash_dict["username"] = self.uuid # Assuming uuid is used for username if available
-                clash_dict["password"] = self.password
-            if self.tls: # HTTPS implies TLS
-                clash_dict["tls"] = True
-                if self.skip_cert_verify:
-                    clash_dict["skip-cert-verify"] = True
-
-
-        # Remove None values for cleaner output
-        return {k: v for k, v in clash_dict.items() if v is not None}
+    def __repr__(self):
+        """
+        提供 Proxy 对象的字符串表示，方便调试。
+        """
+        return (f"Proxy(ps='{self.ps}', type='{self.type}', server='{self.server}', "
+                f"port={self.port}, delay={self.delay:.2f}ms)")
