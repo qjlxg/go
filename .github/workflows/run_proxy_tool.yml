@@ -1,52 +1,43 @@
 # .github/workflows/run_proxy_tool.yml
 
-name: Run Proxy Tool
+name: Update Proxies # 工作流的名称
 
 on:
-  # 调度运行：每天 UTC 时间 00:00 (北京时间上午 8:00) 运行
-  schedule:
-    - cron: '0 0 * * *'
-  # 手动触发：允许您在 GitHub Actions 界面手动运行此工作流
-  workflow_dispatch:
+  push:
+    branches:
+      - main # 当推送到 main 分支时触发此工作流
+  workflow_dispatch: # 允许手动触发此工作流
 
 jobs:
-  build-and-run:
-    runs-on: ubuntu-latest # 使用最新的 Ubuntu 操作系统环境
+  build-and-run: # 定义一个名为 build-and-run 的作业
+    runs-on: ubuntu-latest # 在最新的 Ubuntu 运行器上运行此作业
 
     steps:
-    - name: Checkout repository # 步骤1: 拉取您的代码
-      uses: actions/checkout@v4
+    - name: Checkout repository # 步骤名称：检出仓库
+      uses: actions/checkout@v4 # 使用 actions/checkout@v4 动作来检出代码
 
-    - name: Set up Python # 步骤2: 设置 Python 环境
-      uses: actions/setup-python@v5
+    - name: Set up Python # 步骤名称：设置 Python 环境
+      uses: actions/setup-python@v5 # 使用 actions/setup-python@v5 动作来设置 Python
       with:
-        python-version: '3.9' # 您可以根据需要选择其他 Python 版本，例如 '3.10', '3.11'
-        cache: 'pip' # 缓存 pip 依赖，加快后续运行速度
+        python-version: '3.9' # 指定 Python 版本为 3.9 (请确保与您的项目兼容)
 
-    - name: Install dependencies # 步骤3: 安装 Python 依赖
-      run: |
-        pip install -r requirements.txt
+    - name: Install dependencies # 步骤名称：安装依赖
+      run: | # 运行多行命令
+        python -m pip install --upgrade pip # 升级 pip
+        pip install -r requirements.txt # 安装 requirements.txt 中列出的所有依赖
 
-    - name: Run Proxy Tool # 步骤4: 运行您的 Python 脚本
+    - name: Ensure output directory exists # 步骤名称：确保 output 目录存在
       run: |
-        
-        python main.py
+        mkdir -p output # 创建 output 目录，如果它不存在的话
 
-    - name: Commit output files # 步骤5: 提交 output 文件夹中的文件回仓库
+    - name: Run proxy tool # 步骤名称：运行代理工具
       run: |
-        git config user.name "GitHub Actions Bot"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        # 检查 output/ 目录下是否有实际的更改，有更改才执行 commit
-        git add output/
-        git diff-index --quiet HEAD || git commit -m "Update validated proxies from workflow"
-        git push
-      env:
-        # 重要的：您需要在仓库设置中给 GITHUB_TOKEN 赋予写入权限
-        # 步骤如下：
-        # 1. 进入您的 GitHub 仓库。
-        # 2. 点击 "Settings" (设置) 选项卡。
-        # 3. 在左侧导航栏中，点击 "Actions" 下的 "General" (通用)。
-        # 4. 向下滚动到 "Workflow permissions" (工作流权限) 部分。
-        # 5. 选择 "Read and write permissions" (读写权限)。
-        # 6. 点击 "Save" (保存) 按钮。
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        python main.py # 执行 main.py 脚本
+
+    - name: Commit and Push changes # 步骤名称：提交并推送更改
+      run: |
+        git config user.name "GitHub Actions" # 配置 Git 用户名
+        git config user.email "actions@github.com" # 配置 Git 用户邮箱
+        git add output/proxies.txt output/clash_config.yaml # 添加生成的文件到 Git 暂存区
+        git commit -m "Update proxies [skip ci]" || echo "No changes to commit" # 提交更改，并跳过 CI 循环触发
+        git push # 推送更改到远程仓库
