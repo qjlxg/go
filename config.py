@@ -36,7 +36,7 @@ CLASH_OUTPUT_FILENAME = "clash_config.yaml" # Clash 配置文件的文件名
 
 # 筛选通过验证的代理数量，设置为 None 或 0 表示输出所有有效代理
 # 例如，如果您只想输出延迟最低的前 100 个代理，设置为 100
-TOP_N_PROXIES = None # 或设置为一个整数，如 100
+TOP_N_PROXIES = 586 # 或设置为一个整数，如 100
 
 # 控制 Trojan 代理去重时是否考虑密码
 # 如果设置为 True，则密码不同的 Trojan 代理会被认为是不同的代理。
